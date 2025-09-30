@@ -47,6 +47,7 @@
 #include "dlgTriggersMainArea.h"
 #include "dlgVarsMainArea.h"
 #include "SingleLineTextEdit.h"
+#include "UndoCommands.h"
 
 #include "pre_guard.h"
 #include <QDialog>
@@ -55,6 +56,7 @@
 #include <QScrollArea>
 #include <QTreeWidget>
 #include <QDesktopServices>
+#include <QUndoStack>
 #include "post_guard.h"
 
 // Edbee editor includes
@@ -206,6 +208,7 @@ public:
     void recurseVariablesDown(QTreeWidgetItem* const, QList<QTreeWidgetItem*>&);
     void show_vars();
     void setThemeAndOtherSettings(const QString&);
+    void refreshCurrentItemView();
     // Helper to ensure the foreground color for a button is always
     // readable/contrasts with the background when the latter is colored@
     static QString generateButtonStyleSheet(const QColor& color, const bool isEnabled = true);
@@ -232,6 +235,10 @@ public:
     void hideSystemMessageArea();
     void showIDLabels(const bool);
     void setDisplayFont(const QFont&);
+    void deleteItem(QVariant item, QTreeWidgetItem* treeItem, bool createUndoCommand = true);
+    void addItem(QVariant item, QTreeWidgetItem* treeItem);
+    void refreshTree(QVariant item);
+    void selectItem(QVariant item, int id);
 
 signals:
     void editorClosing();
@@ -560,6 +567,11 @@ private:
     QAction* mDeleteItem = nullptr;
     QAction* mAddGroup = nullptr;
     QAction* mSaveItem = nullptr;
+
+    QAction* mUndoAction = nullptr;
+    QAction* mRedoAction = nullptr;
+
+    QUndoStack* mUndoStack = nullptr;
 
     SearchOptions mSearchOptions = SearchOptionNone;
     QSplitter* searchSplitter;
