@@ -4076,7 +4076,17 @@ void dlgTriggerEditor::addTrigger(bool isFolder)
         }
     }
 
-    mUndoStack->push(new AddItemCommand(this, QVariant::fromValue(pNewTrigger)));
+    pNewTrigger->registerTrigger();
+
+    auto pNewItem = new QTreeWidgetItem();
+    pNewItem->setText(0, name);
+    pNewItem->setData(0, Qt::UserRole, pNewTrigger->getID());
+    pNewItem->setIcon(0, QIcon(QPixmap(isFolder ?
+        qsl(":/icons/folder-red.png") :
+        qsl(":/icons/document-save-as.png"))));
+    pNewItem->setData(0, Qt::AccessibleDescriptionRole, isFolder ? descNewFolder : descNewItem);
+
+    mUndoStack->push(new AddItemCommand(this, QVariant::fromValue(pNewTrigger), pNewItem));
 }
 
 
@@ -4102,7 +4112,17 @@ void dlgTriggerEditor::addTimer(bool isFolder)
         }
     }
 
-    mUndoStack->push(new AddItemCommand(this, QVariant::fromValue(pNewTimer)));
+    mpHost->getTimerUnit()->registerTimer(pNewTimer);
+
+    auto pNewItem = new QTreeWidgetItem();
+    pNewItem->setText(0, name);
+    pNewItem->setData(0, Qt::UserRole, pNewTimer->getID());
+    pNewItem->setIcon(0, QIcon(QPixmap(isFolder ?
+        qsl(":/icons/folder-red.png") :
+        qsl(":/icons/document-save-as.png"))));
+    pNewItem->setData(0, Qt::AccessibleDescriptionRole, isFolder ? descNewFolder : descNewItem);
+
+    mUndoStack->push(new AddItemCommand(this, QVariant::fromValue(pNewTimer), pNewItem));
 }
 
 void dlgTriggerEditor::addVar(bool isFolder)
@@ -4130,7 +4150,16 @@ void dlgTriggerEditor::addVar(bool isFolder)
         }
     }
 
-    mUndoStack->push(new AddItemCommand(this, QVariant::fromValue(newVar)));
+    auto pNewItem = new QTreeWidgetItem();
+    pNewItem->setText(0, name);
+    pNewItem->setData(0, Qt::UserRole, newVar->getValueType());
+    if (isFolder) {
+        pNewItem->setIcon(0, QIcon(QPixmap(qsl(":/icons/table.png"))));
+    } else {
+        pNewItem->setIcon(0, QIcon(QPixmap(qsl(":/icons/variable.png"))));
+    }
+
+    mUndoStack->push(new AddItemCommand(this, QVariant::fromValue(newVar), pNewItem));
 }
 
 void dlgTriggerEditor::addKey(bool isFolder)
@@ -4155,7 +4184,17 @@ void dlgTriggerEditor::addKey(bool isFolder)
         }
     }
 
-    mUndoStack->push(new AddItemCommand(this, QVariant::fromValue(pNewKey)));
+    pNewKey->registerKey();
+
+    auto pNewItem = new QTreeWidgetItem();
+    pNewItem->setText(0, name);
+    pNewItem->setData(0, Qt::UserRole, pNewKey->getID());
+    pNewItem->setIcon(0, QIcon(QPixmap(isFolder ?
+        qsl(":/icons/folder-red.png") :
+        qsl(":/icons/document-save-as.png"))));
+    pNewItem->setData(0, Qt::AccessibleDescriptionRole, isFolder ? descNewFolder : descNewItem);
+
+    mUndoStack->push(new AddItemCommand(this, QVariant::fromValue(pNewKey), pNewItem));
 }
 
 
@@ -4181,7 +4220,17 @@ void dlgTriggerEditor::addAlias(bool isFolder)
         }
     }
 
-    mUndoStack->push(new AddItemCommand(this, QVariant::fromValue(pNewAlias)));
+    pNewAlias->registerAlias();
+
+    auto pNewItem = new QTreeWidgetItem();
+    pNewItem->setText(0, name);
+    pNewItem->setData(0, Qt::UserRole, pNewAlias->getID());
+    pNewItem->setIcon(0, QIcon(QPixmap(isFolder ?
+        qsl(":/icons/folder-red.png") :
+        qsl(":/icons/document-save-as.png"))));
+    pNewItem->setData(0, Qt::AccessibleDescriptionRole, isFolder ? descNewFolder : descNewItem);
+
+    mUndoStack->push(new AddItemCommand(this, QVariant::fromValue(pNewAlias), pNewItem));
 }
 
 void dlgTriggerEditor::addAction(bool isFolder)
@@ -4199,16 +4248,27 @@ void dlgTriggerEditor::addAction(bool isFolder)
         TAction* pParentAction = mpHost->getActionUnit()->getAction(pParentItem->data(0, Qt::UserRole).toInt());
         if (pParentAction) {
             if (pParentAction->isFolder()) {
-                pNewAction->setParent(pParentAction);
+                pNewAction->Tree<TAction>::setParent(pParentAction);
             } else {
-                pNewAction->setParent(pParentAction->getParent());
+                pNewAction->Tree<TAction>::setParent(pParentAction->getParent());
             }
         }
     } else {
-        pNewAction->setName(tr("New toolbar"));
+        name = tr("New toolbar");
+        pNewAction->setName(name);
     }
 
-    mUndoStack->push(new AddItemCommand(this, QVariant::fromValue(pNewAction)));
+    pNewAction->registerAction();
+
+    auto pNewItem = new QTreeWidgetItem();
+    pNewItem->setText(0, name);
+    pNewItem->setData(0, Qt::UserRole, pNewAction->getID());
+    pNewItem->setIcon(0, QIcon(QPixmap(isFolder ?
+        qsl(":/icons/folder-red.png") :
+        qsl(":/icons/document-save-as.png"))));
+    pNewItem->setData(0, Qt::AccessibleDescriptionRole, isFolder ? descNewFolder : descNewItem);
+
+    mUndoStack->push(new AddItemCommand(this, QVariant::fromValue(pNewAction), pNewItem));
 }
 
 
@@ -4234,7 +4294,17 @@ void dlgTriggerEditor::addScript(bool isFolder)
         }
     }
 
-    mUndoStack->push(new AddItemCommand(this, QVariant::fromValue(pNewScript)));
+    pNewScript->registerScript();
+
+    auto pNewItem = new QTreeWidgetItem();
+    pNewItem->setText(0, name);
+    pNewItem->setData(0, Qt::UserRole, pNewScript->getID());
+    pNewItem->setIcon(0, QIcon(QPixmap(isFolder ?
+        qsl(":/icons/folder-red.png") :
+        qsl(":/icons/document-save-as.png"))));
+    pNewItem->setData(0, Qt::AccessibleDescriptionRole, isFolder ? descNewFolder : descNewItem);
+
+    mUndoStack->push(new AddItemCommand(this, QVariant::fromValue(pNewScript), pNewItem));
 }
 
 void dlgTriggerEditor::selectTriggerByID(int id)
@@ -4469,7 +4539,7 @@ void dlgTriggerEditor::saveTrigger()
     oldState["filterTrigger"] = trigger->mFilterTrigger;
     oldState["stayOpen"] = trigger->mStayOpen;
     oldState["soundTrigger"] = trigger->mSoundTrigger;
-    oldState["soundFile"] = trigger->getSound();
+    oldState["soundFile"] = trigger->mSoundFile;
     oldState["isColorizerTrigger"] = trigger->isColorizerTrigger();
     oldState["fgColor"] = trigger->getFgColor();
     oldState["bgColor"] = trigger->getBgColor();
@@ -9425,7 +9495,7 @@ void dlgTriggerEditor::refreshCurrentItemView()
     case EditorViewType::cmAliasView:
         slot_aliasSelected(treeWidget_aliases->currentItem());
         break;
-    case EditorViewType::cmKeyView:
+    case EditorViewType::cmKeysView:
         slot_keySelected(treeWidget_keys->currentItem());
         break;
     case EditorViewType::cmScriptView:
