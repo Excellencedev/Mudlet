@@ -184,6 +184,7 @@ set(mudlet_SRCS
     TToolBar.cpp
     TTreeWidget.cpp
     TTrigger.cpp
+    UndoCommands.cpp
     TVar.cpp
     VarUnit.cpp
     XMLexport.cpp
@@ -362,6 +363,7 @@ set(mudlet_HDRS
     TToolBar.h
     TTreeWidget.h
     TTrigger.h
+    UndoCommands.h
     TVar.h
     utils.h
     VarUnit.h
