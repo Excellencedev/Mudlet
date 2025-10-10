@@ -1,0 +1,1 @@
+Modified `src/KeyUnit.cpp` to safely handle key processing during shutdown by replacing the `try-catch` block with checks for `keyObject- and `keyObject-
