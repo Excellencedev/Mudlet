@@ -208,6 +208,11 @@ bool TimerUnit::registerTimer(TTimer* pT)
     return true;
 }
 
+void TimerUnit::removeTimer(TTimer* pT)
+{
+    unregisterTimer(pT);
+}
+
 void TimerUnit::unregisterTimer(TTimer* pT)
 {
     if (!pT) {

@@ -70,15 +70,15 @@ public:
 
     QList<TScript*> uninstallList;
 
+    void addScript(TScript* pT);
+    void removeScript(TScript*);
 
 private:
     ScriptUnit() = default;
 
     TScript* getScriptPrivate(int id);
     void addScriptRootNode(TScript* pT, int parentPosition = -1, int childPosition = -1);
-    void addScript(TScript* pT);
     void removeScriptRootNode(TScript* pT);
-    void removeScript(TScript*);
     void assembleReport(TScript*);
 
     QPointer<Host> mpHost;

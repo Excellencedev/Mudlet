@@ -71,6 +71,8 @@ public:
     std::list<TAlias*> mCleanupList;
     QList<TAlias*> uninstallList;
 
+    void addAlias(TAlias* pT);
+    void removeAlias(TAlias*);
 
 private:
     AliasUnit() = default;
@@ -79,9 +81,7 @@ private:
     void assembleReport(TAlias*);
     TAlias* getAliasPrivate(int id);
     void addAliasRootNode(TAlias* pT, int parentPosition = -1, int childPosition = -1, bool moveAlias = false);
-    void addAlias(TAlias* pT);
     void removeAliasRootNode(TAlias* pT);
-    void removeAlias(TAlias*);
 
     QPointer<Host> mpHost;
     QMap<int, TAlias*> mAliasMap;

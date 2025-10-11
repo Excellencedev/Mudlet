@@ -3039,7 +3039,7 @@ void dlgTriggerEditor::delete_script()
     refreshTree(QVariant::fromValue(static_cast<TScript*>(nullptr)));
 }
 
-void dlgTriggerEditor::delete_key()
+void dlgTriggerEditor::delete_key(bool withUndo)
 {
     QList<QTreeWidgetItem*> selectedItems = treeWidget_keys->selectedItems();
     if (selectedItems.isEmpty()) {
@@ -10216,18 +10216,29 @@ void dlgTriggerEditor::deleteItem(QVariant item, QTreeWidgetItem* treeItem, bool
     }
 
     if (item.canConvert<TTrigger*>()) {
-        delete item.value<TTrigger*>();
+        TTrigger* trigger = item.value<TTrigger*>();
+        mpHost->getTriggerUnit()->removeTrigger(trigger);
+        delete trigger;
     } else if (item.canConvert<TAlias*>()) {
-        delete item.value<TAlias*>();
+        TAlias* alias = item.value<TAlias*>();
+        mpHost->getAliasUnit()->removeAlias(alias);
+        delete alias;
     } else if (item.canConvert<TKey*>()) {
-        delete item.value<TKey*>();
+        TKey* key = item.value<TKey*>();
+        mpHost->getKeyUnit()->removeKey(key);
+        delete key;
     } else if (item.canConvert<TScript*>()) {
-        delete item.value<TScript*>();
+        TScript* script = item.value<TScript*>();
+        mpHost->getScriptUnit()->removeScript(script);
+        delete script;
     } else if (item.canConvert<TTimer*>()) {
-        delete item.value<TTimer*>();
+        TTimer* timer = item.value<TTimer*>();
+        mpHost->getTimerUnit()->removeTimer(timer);
+        delete timer;
     } else if (item.canConvert<TAction*>()) {
         TAction* action = item.value<TAction*>();
         if (action) {
+            mpHost->getActionUnit()->removeAction(action);
             mpHost->getActionUnit()->updateToolbar();
             delete action;
         }

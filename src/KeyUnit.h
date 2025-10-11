@@ -84,6 +84,8 @@ public:
     // could break things - so only do it if this flag is set:
     bool mRunAllKeyMatches;
 
+    void addKey(TKey* pT);
+    void removeKey(TKey*);
 
 private:
     KeyUnit() = default;
@@ -92,9 +94,7 @@ private:
     void resetStats();
     void assembleReport(TKey*);
     void addKeyRootNode(TKey* pT, int parentPosition = -1, int childPosition = -1, bool moveKey = false);
-    void addKey(TKey* pT);
     void removeKeyRootNode(TKey* pT);
-    void removeKey(TKey*);
 
 
     QPointer<Host> mpHost;

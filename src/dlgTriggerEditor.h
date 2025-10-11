@@ -97,6 +97,9 @@ class dlgVarsMainArea;
 class dlgTriggerEditor : public QMainWindow, private Ui::trigger_editor
 {
     Q_OBJECT
+    friend class PropertyEditCommand;
+    friend class DeleteItemCommand;
+    friend class AddItemCommand;
 
     enum SearchDataRole {
         // Value is the ID of the item found MUST BE Qt::UserRole to avoid
@@ -223,11 +226,11 @@ public:
     void activeToggle_timer();
     void activeToggle_trigger();
     void delete_action();
-    void delete_alias();
-    void delete_key();
-    void delete_script();
-    void delete_timer();
-    void delete_trigger();
+    void delete_alias(bool withUndo = true);
+    void delete_key(bool withUndo = true);
+    void delete_script(bool withUndo = true);
+    void delete_timer(bool withUndo = true);
+    void delete_trigger(bool withUndo = true);
     void delete_variable();
     void setSearchOptions(const SearchOptions);
     void setEditorShowBidi(const bool);

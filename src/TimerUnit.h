@@ -84,13 +84,14 @@ public:
     // are part of):
     QSet<QTimer*> mQTimerSet;
 
+    void addTimer(TTimer* pT);
+    void removeTimer(TTimer* pT);
 private:
     TimerUnit() = default;
 
     void assembleReport(TTimer*);
     TTimer* getTimerPrivate(int id);
     void addTimerRootNode(TTimer* pT, int parentPosition = -1, int childPosition = -1);
-    void addTimer(TTimer* pT);
     void _removeTimerRootNode(TTimer* pT);
     void _removeTimer(TTimer*);
 

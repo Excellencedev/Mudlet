@@ -81,15 +81,15 @@ public:
     void hideToolBar(const QString&);
 
     QList<TAction*> uninstallList;
+    void addAction(TAction* pT);
+    void removeAction(TAction*);
 
 private:
     ActionUnit() = default;
 
     TAction* getActionPrivate(int id);
     void addActionRootNode(TAction* pT, int parentPosition = -1, int childPosition = -1);
-    void addAction(TAction* pT);
     void removeActionRootNode(TAction* pT);
-    void removeAction(TAction*);
     QPointer<Host> mpHost;
     QMap<int, TAction*> mActionMap;
     std::list<TAction*> mActionRootNodeList;
