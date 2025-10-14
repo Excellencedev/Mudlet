@@ -21,7 +21,9 @@
  ***************************************************************************/
 
 
-#include "TMainConsole.h"
+#include "TConsole.h"
+
+
 #include "Host.h"
 #include "TCommandLine.h"
 #include "TDebug.h"
@@ -61,7 +63,6 @@ TMainConsole::TMainConsole(Host* pH, QWidget* parent)
     // is not fatal...
     connect(mudlet::self(), &mudlet::signal_profileMapReloadRequested, this, &TMainConsole::slot_reloadMap, Qt::UniqueConnection);
     connect(this, &TMainConsole::signal_newDataAlert, mudlet::self(), &mudlet::slot_newDataOnHost, Qt::UniqueConnection);
-    connect(mpHost, &Host::mxpErrorDetected, this, &TMainConsole::handleMxpError);
 
     // Load up the spelling dictionary from the system:
     setSystemSpellDictionary(mpHost->getSpellDic());
@@ -87,19 +88,6 @@ TMainConsole::~TMainConsole()
         // Need to commit any changes to personal dictionary
         qDebug() << "TCommandLine::~TConsole(...) INFO - Saving profile's own Hunspell dictionary...";
         mudlet::self()->saveDictionary(mudlet::self()->getMudletPath(enums::profileDataItemPath, mProfileName, qsl("profile")), mWordSet_profile);
-    }
-}
-
-void TMainConsole::handleMxpError()
-{
-    QMessageBox msgBox;
-    msgBox.setText("A malformed MXP tag was detected, which may be causing display issues.");
-    msgBox.setInformativeText("Do you want to disable MXP and reconnect?");
-    msgBox.setStandardButtons(QMessageBox::Yes | QMessageBox::No);
-    msgBox.setDefaultButton(QMessageBox::Yes);
-    int ret = msgBox.exec();
-    if (ret == QMessageBox::Yes) {
-        mpHost->disableMxpAndReconnect();
     }
 }
 
@@ -173,7 +161,10 @@ void TMainConsole::toggleLogging(bool isMessageEnabled)
     QFile file(loggingPath);
     const QDateTime logDateTime = QDateTime::currentDateTime();
     if (!mLogToLogFile) {
-        file.open(QIODevice::WriteOnly | QIODevice::Text);
+        if (!file.open(QIODevice::WriteOnly | QIODevice::Text)) {
+            qWarning() << "TMainConsole: failed to open autolog file for writing:" << file.errorString();
+            return;
+        }
         QTextStream out(&file);
         file.close();
 
@@ -220,9 +211,15 @@ void TMainConsole::toggleLogging(bool isMessageEnabled)
         // WriteOnly = "The device is open for writing. Note that this mode
         // implies Truncate."
         if (mpHost->mIsCurrentLogFileInHtmlFormat) {
-            mLogFile.open(QIODevice::ReadWrite);
+            if (!mLogFile.open(QIODevice::ReadWrite)) {
+                qWarning() << "TMainConsole: failed to open log file for reading/writing:" << mLogFile.errorString();
+                return;
+            }
         } else {
-            mLogFile.open(QIODevice::Append);
+            if (!mLogFile.open(QIODevice::Append)) {
+                qWarning() << "TMainConsole: failed to open log file for appending:" << mLogFile.errorString();
+                return;
+            }
         }
         mLogStream.setDevice(&mLogFile);
 
@@ -1175,7 +1172,7 @@ void TMainConsole::printOnDisplay(std::string& incomingSocketData, const bool is
     auto& mxpEventQueue = mpHost->mMxpClient.mMxpEvents;
     while (!mxpEventQueue.isEmpty()) {
         const auto& event = mxpEventQueue.dequeue();
-        mpHost->mLuaInterpreter.signalMXPEvent(event.name, event.attrs, event.actions);
+        mpHost->mLuaInterpreter.signalMXPEvent(event.name, event.attrs, event.actions, event.caption);
     }
 
     const double processT = mProcessingTimer.elapsed() / 1000.0;

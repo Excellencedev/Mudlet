@@ -11,7 +11,7 @@ PROJECT(mudlet-tests
 
 ENABLE_TESTING()
 
-find_package(Qt6 6.4.0 REQUIRED
+find_package(Qt6 6.8.2 REQUIRED
     COMPONENTS Core
     Multimedia
     MultimediaWidgets
@@ -20,15 +20,7 @@ find_package(Qt6 6.4.0 REQUIRED
     UiTools
     Widgets
     Concurrent
-    Core5Compat
     Test)
-
-find_package(Boost 1.44)
-find_package(ZIP REQUIRED)
-find_package(ZLIB REQUIRED)
-find_package(PCRE REQUIRED)
-find_package(PUGIXML REQUIRED)
-find_package(HUNSPELL REQUIRED)
 
 link_libraries(
     Qt6::Test
@@ -38,15 +30,7 @@ link_libraries(
     Qt6::Multimedia
     Qt6::MultimediaWidgets
     Qt6::UiTools
-    Qt6::Widgets
-    Qt6::Core5Compat
-    Boost::boost
-    HUNSPELL::HUNSPELL
-    ZIP::ZIP
-    ZLIB::ZLIB
-    PCRE::PCRE
-    PUGIXML::PUGIXML
-    edbee-lib)
+    Qt6::Widgets)
 
 set(CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/../cmake ${CMAKE_MODULE_PATH})
 
@@ -107,6 +91,9 @@ add_test(NAME TMxpFormattingTagsTest COMMAND TMxpFormattingTagsTest)
 
 add_executable(TMxpCustomElementTagHandlerTest TMxpCustomElementTagHandlerTest.cpp ${MXP_SOURCE} ../src/TMxpSendTagHandler.cpp ../src/TMxpTagParser.cpp ../src/TMxpNodeBuilder.cpp )
 add_test(NAME TMxpCustomElementTagHandlerTest COMMAND TMxpCustomElementTagHandlerTest)
+
+add_executable(TMxpProcessorTest TMxpProcessorTest.cpp ${MXP_SOURCE})
+add_test(NAME TMxpProcessorTest COMMAND TMxpProcessorTest)
 
 add_executable(TLuaInterfaceTest TLuaInterfaceTest.cpp ../src/LuaInterface.cpp ../src/TVar.cpp ../src/VarUnit.cpp)
 add_test(NAME TLuaInterfaceTest COMMAND TLuaInterfaceTest)

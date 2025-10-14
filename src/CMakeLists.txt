@@ -190,7 +190,6 @@ set(mudlet_SRCS
     XMLimport.cpp)
 
 if(APPLE)
-  list(APPEND mudlet_SRCS AnnouncerMac.mm)
   # Sparkle updater for macOS
   if(USE_UPDATER)
     list(APPEND mudlet_SRCS sparkleupdater.mm)
@@ -203,11 +202,6 @@ if(APPLE)
       COMPILE_OPTIONS "-fobjc-arc"
   )
   endif()
-elseif(WIN32)
-  list(APPEND mudlet_SRCS AnnouncerWindows.cpp)
-  list(APPEND mudlet_SRCS uiawrapper.cpp)
-else()
-  list(APPEND mudlet_SRCS AnnouncerUnix.cpp)
 endif()
 
 # This is for compiled UI files, not those used at runtime
@@ -244,7 +238,6 @@ set(mudlet_HDRS
     ActionUnit.h
     AliasUnit.h
     AltFocusMenuBarDisable.h
-    Announcer.h
     ctelnet.h
     DarkTheme.h
     discord.h
@@ -377,9 +370,6 @@ set(mudlet_HDRS
     XMLimport.h
     enums.h)
 
-if(WIN32)
-  list(APPEND mudlet_HDRS uiawrapper.h)
-endif()
 
 if(USE_UPDATER)
   list(APPEND mudlet_SRCS updater.cpp)
@@ -389,6 +379,22 @@ endif(USE_UPDATER)
 if(USE_3DMAPPER)
   list(APPEND mudlet_SRCS glwidget.cpp)
   list(APPEND mudlet_HDRS glwidget.h)
+  list(APPEND mudlet_SRCS modern_glwidget.cpp)
+  list(APPEND mudlet_HDRS modern_glwidget.h)
+  list(APPEND mudlet_SRCS CameraController.cpp)
+  list(APPEND mudlet_HDRS CameraController.h)
+  list(APPEND mudlet_SRCS GeometryManager.cpp)
+  list(APPEND mudlet_HDRS GeometryManager.h)
+  list(APPEND mudlet_SRCS RenderCommand.cpp)
+  list(APPEND mudlet_HDRS RenderCommand.h)
+  list(APPEND mudlet_SRCS RenderCommandQueue.cpp)
+  list(APPEND mudlet_HDRS RenderCommandQueue.h)
+  list(APPEND mudlet_SRCS ResourceManager.cpp)
+  list(APPEND mudlet_HDRS ResourceManager.h)
+  list(APPEND mudlet_SRCS ShaderManager.cpp)
+  list(APPEND mudlet_HDRS ShaderManager.h)
+  list(APPEND mudlet_HDRS glwidget_integration.h)
+  list(APPEND mudlet_SRCS glwidget_integration.cpp)
 endif(USE_3DMAPPER)
 
 # credit to https://github.com/heavyai/heavydb/blob/72c90bc290b79dd30240da41c103a00720f6b050/CMakeLists.txt#L119
@@ -495,8 +501,6 @@ if(USE_3DMAPPER)
   find_package(OpenGL REQUIRED)
 endif()
 
-set(CMAKE_AUTOUIC ON)
-set(CMAKE_AUTOUIC_SEARCH_PATHS "${CMAKE_CURRENT_SOURCE_DIR}/ui")
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
 
 add_executable(mudlet ${mudlet_SRCS} ${mudlet_RCCS} ${mudlet_HDRS} ${mudlet_UIS})
@@ -572,17 +576,6 @@ set_target_properties(mudlet PROPERTIES
   AUTOMOC ON AUTORCC ON POSITION_INDEPENDENT_CODE ON
   AUTOGEN_ORIGIN_DEPENDS OFF)
 
-# Ensure the AUTOUIC-generated headers (ui_*.h) are on the include path.
-# This points to: <binary_dir>/CMakeFiles/mudlet_autogen/include
-target_include_directories(mudlet PRIVATE
-  "$<BUILD_INTERFACE:$<TARGET_PROPERTY:mudlet,AUTOGEN_BUILD_DIR>/include>")
-
-# Fallback for environments where generator expressions for AUTOGEN_BUILD_DIR
-# are not honored early enough (seen on some CI toolchains). Use the canonical
-# CMake autogen include path as an explicit include dir.
-target_include_directories(mudlet PRIVATE
-  "${CMAKE_CURRENT_BINARY_DIR}/CMakeFiles/mudlet_autogen/include")
-
 if(USE_FONTS)
   target_compile_definitions(mudlet PRIVATE INCLUDE_FONTS)
 endif()
@@ -602,6 +595,11 @@ target_compile_definitions(mudlet
 
 if(USE_OWN_QTKEYCHAIN)
     target_compile_definitions(mudlet PRIVATE INCLUDE_OWN_QT6_KEYCHAIN QTKEYCHAIN_NO_EXPORT)
+endif()
+
+# Define shader hot-reloading if enabled
+if(USE_SHADER_HOT_RELOAD AND USE_3DMAPPER)
+  target_compile_definitions(mudlet PRIVATE MUDLET_SHADER_HOT_RELOAD=1)
 endif()
 
 # Used to force an include of winsock2.h BEFORE Qt tries to include winsock.h
@@ -648,6 +646,7 @@ if(USE_3DMAPPER)
   target_link_libraries(mudlet OpenGL::GLU)
   target_compile_definitions(mudlet PRIVATE INCLUDE_3DMAPPER)
 endif()
+
 
 if(USE_VARIABLE_SPLASH_SCREEN)
   target_compile_definitions(mudlet PRIVATE INCLUDE_VARIABLE_SPLASH_SCREEN)

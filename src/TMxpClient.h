@@ -31,12 +31,10 @@ class TMediaData;
 class TMxpClient
 {
 protected:
-    TMxpContext* mpContext;
+    TMxpContext* mpContext = nullptr;
 
 public:
-    TMxpClient()
-    : mpContext(nullptr)
-    {}
+    TMxpClient() = default;
 
     virtual void initialize(TMxpContext* context) { mpContext = context; }
 
@@ -99,6 +97,11 @@ public:
         Q_UNUSED(tag)
         return result;
     }
+
+    virtual void setCaptionForSendEvent(const QString& caption) { Q_UNUSED(caption) }
+
+    virtual void displayMxpError(const QString& message) = 0;
+    virtual void promptToDisableMxp() = 0;
 };
 
 #endif //MUDLET_TMXPCLIENT_H

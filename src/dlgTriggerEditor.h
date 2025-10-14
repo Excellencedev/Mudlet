@@ -174,10 +174,12 @@ public:
         cmKeysView = 0x06,
         cmVarsView = 0x07
     };
+    Q_ENUM(EditorViewType)
 
     void closeEvent(QCloseEvent* event) override;
     void focusInEvent(QFocusEvent*) override;
     void focusOutEvent(QFocusEvent*) override;
+    void showEvent(QShowEvent* event) override;
     void enterEvent(TEnterEvent* event) override;
     bool eventFilter(QObject*, QEvent* event) override;
     bool event(QEvent* event) override;
@@ -230,6 +232,9 @@ public:
     void hideSystemMessageArea();
     void showIDLabels(const bool);
     void setDisplayFont(const QFont&);
+
+signals:
+    void editorClosing();
 
 public slots:
     void slot_toggleHiddenVariables(bool);
@@ -318,6 +323,7 @@ private slots:
     void slot_itemEdited();
     void slot_searchSplitterMoved(const int pos, const int index);
     void slot_clickedMessageBox(const QString&);
+    void slot_bannerDismissClicked();
 
 public:
     TConsole* mpErrorConsole = nullptr;
@@ -382,6 +388,14 @@ private:
     void exportActionToClipboard();
     void exportScriptToClipboard();
     void exportKeyToClipboard();
+
+    // Multi-selection export functions
+    void exportMultipleTriggersToClipboard(const QList<TTrigger*>& triggers);
+    void exportMultipleTimersToClipboard(const QList<TTimer*>& timers);
+    void exportMultipleAliasesToClipboard(const QList<TAlias*>& aliases);
+    void exportMultipleActionsToClipboard(const QList<TAction*>& actions);
+    void exportMultipleScriptsToClipboard(const QList<TScript*>& scripts);
+    void exportMultipleKeysToClipboard(const QList<TKey*>& keys);
 
     void clearDocument(edbee::TextEditorWidget* pEditorWidget, const QString& initialText = QString());
 
@@ -452,6 +466,7 @@ private:
     void setShortcuts(const bool active = true);
     void setShortcuts(QList<QAction*> actionList, const bool active = true);
 
+    bool showDeleteConfirmation(const QString& title, const QString& message);
     void showOrHideRestoreEditorActionsToolbarAction();
     void showOrHideRestoreEditorItemsToolbarAction();
     void checkForMoreThanOneTriggerItem();
@@ -613,6 +628,20 @@ private:
     QMap<EditorViewType, introTextParts> introAddItem;
 
     void showIntro(const QString& = QString());
+
+    // Banner state tracking
+    QTimer* mpBannerUndoTimer = nullptr;
+    EditorViewType mLastDismissedBannerView = EditorViewType::cmUnknownView;
+    QString mLastDismissedBannerContent;
+
+    // Banner methods
+    void handleBannerDismiss();
+    void showBannerUndoToast();
+    void undoBannerDismiss();
+    void handlePermanentBannerDismiss();
+    bool bannerPermanentlyHidden(EditorViewType viewType);
+    void setBannerPermanentlyHidden(EditorViewType viewType, bool hidden);
+
     QString descActive;
     QString descInactive;
     QString descActiveFolder;

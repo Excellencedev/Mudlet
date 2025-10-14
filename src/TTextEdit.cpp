@@ -27,14 +27,10 @@
 #include "TAccessibleTextEdit.h"
 #include "TTextEdit.h"
 
-#include "Announcer.h"
 #include "TConsole.h"
 #include "TDockWidget.h"
 #include "TEvent.h"
 #include "mudlet.h"
-#if defined(Q_OS_WINDOWS)
-#include "uiawrapper.h"
-#endif
 #include "widechar_width.h"
 #include "TTextProperties.h"
 
@@ -62,26 +58,11 @@
 // Text data stored separately in a TBuffer
 TTextEdit::TTextEdit(TConsole* pC, QWidget* pW, TBuffer* pB, Host* pH, bool isLowerPane)
 : QWidget(pW)
-, mCursorY(0)
-, mCursorX(0)
-, mCaretLine(0)
-, mCaretColumn(0)
-, mOldCaretColumn(0)
-, mIsCommandPopup(false)
-, mIsTailMode(true)
-, mForceUpdate(false)
 , mIsLowerPane(isLowerPane)
-, mLastRenderedOffset(0)
-, mMouseTracking(false)
-, mMouseTrackLevel(0)
-, mOldScrollPos(0)
 , mpBuffer(pB)
 , mpConsole(pC)
 , mpHost(pH)
-, mScreenOffset(0)
-, mMaxHRange(0)
 , mWideAmbigousWidthGlyphs(pH->wideAmbiguousEAsianGlyphs())
-, mTabStopwidth(8)
 , mMouseWheelRemainder()
 {
     mLastClickTimer.start();
@@ -157,7 +138,11 @@ void TTextEdit::focusInEvent(QFocusEvent* event)
 void TTextEdit::focusOutEvent(QFocusEvent* event)
 {
     // Safety check: during destruction, mpHost might be null
-    if (mpHost && mpHost->caretEnabled()) {
+    // Avoid disabling caret mode when the window is merely deactivated
+    // (e.g., user Alt+Tabs away). This preserves focus for screen reader
+    // users like NVDA so returning to Mudlet restores the original widget
+    // rather than forcing focus to the command line.
+    if (mpHost && mpHost->caretEnabled() && event->reason() != Qt::ActiveWindowFocusReason) {
         mpHost->setCaretEnabled(false);
     }
 
@@ -323,11 +308,7 @@ void TTextEdit::showNewLines()
 
 
     if (QAccessible::isActive() && mpConsole->getType() == TConsole::MainConsole
-        && mpHost->mAnnounceIncomingText && mudlet::self()->getActiveHost() == mpHost
-#if defined (Q_OS_WINDOWS)
-            && UiaWrapper::self()->clientsAreListening()
-#endif
-            ) {
+        && mpHost->mAnnounceIncomingText && mudlet::self()->getActiveHost() == mpHost) {
         QString newLines;
 
         // content has been deleted
@@ -1677,6 +1658,24 @@ void TTextEdit::searchSelectionOnline()
     QDesktopServices::openUrl(QUrl(url));
 }
 
+void TTextEdit::slot_copySelectionToSearchBar()
+{
+    if (!establishSelectedText()) {
+        return;
+    }
+
+    QString selectedText = getSelectedText(QChar::LineFeed).trimmed();
+
+    if (mudlet::self()->dactionInputLine->isChecked()) {
+        // If hidden then reveal as if pressed Alt-L
+        mudlet::self()->dactionInputLine->setChecked(false);
+        mudlet::self()->mpCurrentActiveHost->setCompactInputLine(false);
+    }
+    mpConsole->mpBufferSearchBox->setText(selectedText);
+    mpConsole->mpBufferSearchBox->setFocus();
+    mpConsole->mpBufferSearchBox->selectAll();
+}
+
 QString TTextEdit::getSelectedText(const QChar& newlineChar, const bool showTimestamps)
 {
     // mPA QPoint where selection started
@@ -1815,7 +1814,7 @@ void TTextEdit::mouseReleaseEvent(QMouseEvent* event)
         auto* actionCopyImage = new QAction(tr("Copy as image"), this);
         connect(actionCopyImage, &QAction::triggered, this, &TTextEdit::slot_copySelectionToClipboardImage);
 
-        QAction* action3 = new QAction(tr("Select All"), this);
+        QAction* action3 = new QAction(tr("Select all"), this);
         action3->setToolTip(QString());
         connect(action3, &QAction::triggered, this, &TTextEdit::slot_selectAll);
 

@@ -28,8 +28,6 @@
 #include "TMxpNodeBuilder.h"
 #include "TMxpTagProcessor.h"
 
-#include <QElapsedTimer>
-
 class Host;
 
 enum TMXPMode { MXP_MODE_OPEN, MXP_MODE_SECURE, MXP_MODE_LOCKED, MXP_MODE_TEMP_SECURE };
@@ -38,7 +36,6 @@ enum TMxpProcessingResult { HANDLER_FALL_THROUGH, HANDLER_NEXT_CHAR, HANDLER_COM
 // handles the MXP protocol
 class TMxpProcessor
 {
-    static const int cMxpTagTimeout = 500; // ms
 public:
     explicit TMxpProcessor(TMxpClient* pMxpClient)
     : mMxpTagBuilder(true)
@@ -77,7 +74,8 @@ private:
 
     // value of the last resolved entity:
     QString lastEntityValue;
-    QElapsedTimer mMxpTagTimer;
+
+    int mMxpParseErrorCount = 0;
 };
 
 #endif //MUDLET_TMXPPROCESSOR_H

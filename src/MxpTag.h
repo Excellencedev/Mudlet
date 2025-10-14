@@ -21,6 +21,7 @@
  *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *
  ***************************************************************************/
 
+#include "utils.h"
 
 #include "pre_guard.h"
 #include <QMap>
@@ -61,7 +62,7 @@ class MxpTextNode;
 class MxpNode
 {
 public:
-    enum Type { MXP_NODE_TYPE_TEXT, MXP_NODE_TYPE_START_TAG, MXP_NODE_TYPE_END_TAG };
+    enum Type { MXP_NODE_TYPE_TEXT, MXP_NODE_TYPE_START_TAG, MXP_NODE_TYPE_END_TAG, MXP_NODE_TYPE_PARSE_ERROR };
 
     MxpNode::Type getType() const { return mType; }
 
@@ -71,11 +72,11 @@ public:
 
     MxpEndTag* asEndTag() { return mType == MXP_NODE_TYPE_END_TAG ? reinterpret_cast<MxpEndTag*>(this) : nullptr; }
 
-    MxpTextNode* asText() { return mType == MXP_NODE_TYPE_TEXT ? reinterpret_cast<MxpTextNode*>(this)  : nullptr; }
+    MxpTextNode* asText() { return mType == MXP_NODE_TYPE_TEXT || mType == MXP_NODE_TYPE_PARSE_ERROR ? reinterpret_cast<MxpTextNode*>(this)  : nullptr; }
 
     virtual QString toString() const = 0;
 
-    bool isTag() { return mType != MXP_NODE_TYPE_TEXT; }
+    bool isTag() { return mType != MXP_NODE_TYPE_TEXT && mType != MXP_NODE_TYPE_PARSE_ERROR; }
 
     bool isEndTag() { return mType == MXP_NODE_TYPE_END_TAG; }
 
@@ -90,14 +91,24 @@ protected:
 
 class MxpTextNode : public MxpNode
 {
+protected:
     QString mContent;
 
 public:
-    explicit MxpTextNode(const QString& content) : MxpNode(MXP_NODE_TYPE_TEXT), mContent(QString(content)) {}
+    explicit MxpTextNode(const QString& content) : MxpTextNode(content, MXP_NODE_TYPE_TEXT) {}
 
     inline const QString& getContent() const { return mContent; }
 
     virtual QString toString() const { return mContent; }
+
+protected:
+    MxpTextNode(const QString& content, MxpNode::Type type) : MxpNode(type), mContent(QString(content)) {}
+};
+
+class MxpParseErrorNode : public MxpTextNode
+{
+public:
+    explicit MxpParseErrorNode(const QString& content) : MxpTextNode(content, MXP_NODE_TYPE_PARSE_ERROR) {}
 };
 
 class MxpTag : public MxpNode

@@ -23,25 +23,23 @@
 
 TMxpNodeBuilder::TMxpNodeBuilder(bool ignoreText)
 : mOptionIgnoreText(ignoreText)
-, mIsEndTag(false)
-, mIsEmptyTag(false)
-, mIsInsideTag(false)
-, mIsInsideAttr(false)
-, mReadingAttrValue(false)
-, mIsInsideSequence(false)
-, mIsQuotedSequence(false)
-, mOpeningQuote('\0')
-, mSequenceHasSpaces(false)
-, mHasSequence(false)
-, mIsInsideText(false)
-, mHasNode(false)
-, mIsText(false)
 {
 }
 
 bool TMxpNodeBuilder::accept(char ch)
 {
     if (mIsInsideTag) { // inside tag
+        if (ch == '\n') {
+            mParseError = true;
+            mIsInsideTag = false;
+            mIsText = true;
+            mHasNode = true;
+            mCurrentText = "<";
+            mCurrentText.append(mCurrentRawTag.c_str());
+            resetCurrentTag();
+            return true;
+        }
+        mCurrentRawTag.push_back(ch);
         mCurrentText.clear();
         mIsText = false;
 
@@ -57,8 +55,9 @@ bool TMxpNodeBuilder::accept(char ch)
             mIsText = true;
             mHasNode = true;
             return true;
-        } else {              // second call
-            mHasNode = false; //mIsText = false
+        } else { // second call
+            mHasNode = false;
+            mCurrentRawTag.clear();
             return acceptTag(ch);
         }
     } else if (!mOptionIgnoreText) { // text
@@ -131,6 +130,8 @@ void TMxpNodeBuilder::resetCurrentTag()
     mIsInsideTag = false;
     mCurrentTagName.clear();
     mCurrentTagAttrs.clear();
+    mCurrentRawTag.clear();
+    mParseError = false;
 
     resetCurrentAttribute();
 }
@@ -221,7 +222,14 @@ MxpTag* TMxpNodeBuilder::buildTag()
 }
 MxpNode* TMxpNodeBuilder::buildNode()
 {
-    MxpNode* node = mIsText ? static_cast<MxpNode*>(new MxpTextNode(mCurrentText.c_str())) : static_cast<MxpNode*>(buildTag());
+    MxpNode* node;
+    if (mParseError) {
+        node = new MxpParseErrorNode(mCurrentText.c_str());
+        mParseError = false;
+    }
+    else {
+        node = mIsText ? static_cast<MxpNode*>(new MxpTextNode(mCurrentText.c_str())) : static_cast<MxpNode*>(buildTag());
+    }
     mCurrentText.clear();
     mHasNode = false;
     return node;

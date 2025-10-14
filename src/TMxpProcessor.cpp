@@ -23,7 +23,6 @@
 #include "TMxpProcessor.h"
 #include "pre_guard.h"
 #include <QDebug>
-#include "Host.h"
 #include "post_guard.h"
 
 bool TMxpProcessor::setMode(const QString& code)
@@ -47,7 +46,7 @@ bool TMxpProcessor::setMode(const QString& code)
  *     default mode until changes with one of the 'lock mode' tags listed
  *     below.
  * * 1 - SECURE LINE (until next newline) all tags and commands in MXP are
- *     allowed within the line.  When a newline is received from the MUD, 
+ *     allowed within the line.  When a newline is received from the MUD,
  *     the mode reverts back to the Default mode.
  * * 2 - LOCKED LINE (until next newline) no MXP or HTML commands are
  *     allowed in the line.  The line is not parsed for any tags at all.
@@ -65,7 +64,7 @@ bool TMxpProcessor::setMode(const QString& code)
  * * 6 - LOCK SECURE MODE set secure mode.  Mode remains in effect until
  *     changed.  Secure mode becomes the new default mode.
  * * 7 - LOCK LOCKED MODE set locked mode.  Mode remains in effect until
- *     changed.  Locked mode becomes the new default mode.
+ *     changed.  Locked mode becomes the new default mode."
  */
 bool TMxpProcessor::setMode(int modeCode)
 {
@@ -153,19 +152,27 @@ void TMxpProcessor::disable()
 
 TMxpProcessingResult TMxpProcessor::processMxpInput(char& ch, bool resolveCustomEntities)
 {
-    if (mMxpTagBuilder.isInsideTag()) {
-        if (mMxpTagTimer.elapsed() > cMxpTagTimeout) {
-            mMxpTagBuilder.reset();
-            qWarning() << "MXP tag parsing timed out. Resetting MXP parser.";
-            static_cast<Host*>(mpMxpClient)->mxpErrorDetected();
-            return HANDLER_NEXT_CHAR;
-        }
-    } else {
-        mMxpTagTimer.start();
-    }
-
     if (!mMxpTagBuilder.accept(ch) && mMxpTagBuilder.isInsideTag() && !mMxpTagBuilder.hasTag()) {
         return HANDLER_NEXT_CHAR;
+    }
+
+    if (mMxpTagBuilder.hasNode() && mMxpTagBuilder.isError()) {
+        QScopedPointer<MxpNode> const node(mMxpTagBuilder.buildNode());
+        if (node && node->getType() == MxpNode::MXP_NODE_TYPE_PARSE_ERROR) {
+            const QString& text = node->asText()->getContent();
+
+            if (!text.isEmpty()) {
+                mpMxpClient->displayMxpError(
+                    qsl("Malformed tag found: '%1'").arg(text));
+
+                mMxpParseErrorCount++;
+
+                if (mMxpParseErrorCount > 5) {
+                    mpMxpClient->promptToDisableMxp();
+                    mMxpParseErrorCount = 0;
+                }
+            }
+        }
     }
 
     if (mMxpTagBuilder.hasTag()) {
