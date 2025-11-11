@@ -32,7 +32,6 @@ cmake-build-release
 cmake-build-relwithdebinfo
 
 #VS Code
-.vscode/*.code-workspace
 
 #Docker
 docker/docker-compose.override.yml
@@ -49,3 +48,5 @@ CMakeSettings.json
 # flatpak builder
 CI/.flatpak-builder
 CI/build-dir
+config.bat
+node_modules
